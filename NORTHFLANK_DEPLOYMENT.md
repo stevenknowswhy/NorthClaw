@@ -6,7 +6,9 @@ This guide provides step-by-step instructions for deploying OpenClaw to Northfla
 
 - A Northflank account (https://app.northflank.com/t/stefano94103s-team)
 - A Git repository with this code
-- API keys for at least one AI provider (OpenAI or Anthropic)
+- API keys for:
+  - **Kimi (Moonshot AI)** - Primary AI provider
+  - **OpenRouter** - Heartbeat and fallback provider
 
 ## Step-by-Step Deployment
 
@@ -58,22 +60,37 @@ Under **"Volumes"**, add two volumes:
 
 Under **"Environment variables"**, add your API keys:
 
-**Required:**
-```
-NODE_ENV=production
-OPENAI_API_KEY=sk-your-actual-key-here
-```
-OR
-```
-NODE_ENV=production
-ANTHROPIC_API_KEY=sk-ant-your-actual-key-here
-```
+#### Required (AI Providers)
 
-**Optional (for messaging integrations):**
+| Variable | Value |
+|----------|-------|
+| `NODE_ENV` | `production` |
+| `KIMI_API_KEY` | Your Kimi (Moonshot AI) API key |
+| `KIMI_MODEL` | `moonshot-v1-128k` (or `moonshot-v1-32k`, `moonshot-v1-8k`) |
+| `KIMI_BASE_URL` | `https://api.moonshot.cn/v1` |
+| `OPENROUTER_API_KEY` | Your OpenRouter API key |
+| `OPENROUTER_HEARTBEAT_MODEL` | `openai/gpt-3.5-turbo` (or `google/gemini-flash-1.5`) |
+| `OPENROUTER_FALLBACK_MODEL` | `anthropic/claude-3-haiku` (or `openai/gpt-4o-mini`) |
+
+#### Optional (Messaging Integrations)
+
+| Variable | Description |
+|----------|-------------|
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token |
+| `SLACK_BOT_TOKEN` | Slack bot token |
+| `DISCORD_BOT_TOKEN` | Discord bot token |
+| `WHATSAPP_PHONE_NUMBER` | WhatsApp phone number |
+
+#### Example Configuration
+
 ```
-TELEGRAM_BOT_TOKEN=your-telegram-bot-token
-SLACK_BOT_TOKEN=xoxb-your-slack-bot-token
-DISCORD_BOT_TOKEN=your-discord-bot-token
+NODE_ENV=production
+KIMI_API_KEY=sk-xxxxxxxxxxxxx
+KIMI_MODEL=moonshot-v1-128k
+KIMI_BASE_URL=https://api.moonshot.cn/v1
+OPENROUTER_API_KEY=sk-or-xxxxxxxxxxxxx
+OPENROUTER_HEARTBEAT_MODEL=openai/gpt-3.5-turbo
+OPENROUTER_FALLBACK_MODEL=anthropic/claude-3-haiku
 ```
 
 ⚠️ **Important**: Use Northflank's secret management for sensitive values. Never hardcode API keys.

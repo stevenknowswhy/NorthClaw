@@ -52,17 +52,33 @@ In Northflank, add persistent volumes:
 #### Step 4: Environment Variables
 Add required environment variables in Northflank:
 
+##### AI Providers (Required)
+
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `NODE_ENV` | Environment (production/development) | No |
-| `OPENAI_API_KEY` | OpenAI API key for GPT models | Yes* |
-| `ANTHROPIC_API_KEY` | Anthropic API key for Claude | Yes* |
-| `WHATSAPP_PHONE_NUMBER` | WhatsApp integration | No |
-| `TELEGRAM_BOT_TOKEN` | Telegram bot token | No |
-| `SLACK_BOT_TOKEN` | Slack bot token | No |
-| `DISCORD_BOT_TOKEN` | Discord bot token | No |
+| `KIMI_API_KEY` | Kimi (Moonshot AI) API key | Yes** |
+| `KIMI_MODEL` | Kimi model (default: moonshot-v1-128k) | No |
+| `OPENROUTER_API_KEY` | OpenRouter API key (heartbeat/fallback) | Yes** |
+| `OPENROUTER_HEARTBEAT_MODEL` | Heartbeat model (default: openai/gpt-3.5-turbo) | No |
+| `OPENROUTER_FALLBACK_MODEL` | Fallback model (default: anthropic/claude-3-haiku) | No |
 
-*At least one AI provider API key is required.
+**Both Kimi and OpenRouter keys are required for this configuration.
+
+##### Optional AI Providers (Backup)
+
+| Variable | Description |
+|----------|-------------|
+| `OPENAI_API_KEY` | OpenAI API key for GPT models |
+| `ANTHROPIC_API_KEY` | Anthropic API key for Claude |
+
+##### Messaging Platforms (Optional)
+
+| Variable | Description |
+|----------|-------------|
+| `WHATSAPP_PHONE_NUMBER` | WhatsApp integration |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token |
+| `SLACK_BOT_TOKEN` | Slack bot token |
+| `DISCORD_BOT_TOKEN` | Discord bot token |
 
 #### Step 5: Resource Allocation
 Recommended settings:
@@ -74,6 +90,32 @@ Recommended settings:
 Click "Deploy" and monitor the logs for any issues.
 
 ## Configuration
+
+### AI Provider Configuration
+
+This setup uses **Kimi 2.5** as the main AI provider and **OpenRouter** for heartbeat/fallback:
+
+- **Kimi (Moonshot AI)**: Primary model for all AI responses
+  - Model: `moonshot-v1-128k` (128k context)
+  - Alternative models: `moonshot-v1-32k`, `moonshot-v1-8k`
+
+- **OpenRouter**: Secondary provider for heartbeat checks and fallback
+  - Heartbeat model: `openai/gpt-3.5-turbo` (lightweight health checks)
+  - Fallback model: `anthropic/claude-3-haiku` (backup when Kimi is unavailable)
+
+This configuration provides cost efficiency (Kimi's competitive pricing) with reliability (OpenRouter fallback).
+
+### Getting API Keys
+
+#### Kimi (Moonshot AI)
+1. Visit [Moonshot AI](https://platform.moonshot.cn/)
+2. Create an account and obtain your API key
+3. The key format starts with `sk-`
+
+#### OpenRouter
+1. Visit [OpenRouter](https://openrouter.ai/)
+2. Create an account and obtain your API key
+3. The key format starts with `sk-or-`
 
 ### First-Time Setup
 
@@ -119,10 +161,19 @@ openclaw skill add <skill-name>
 
 ## Resources
 
+### OpenClaw
 - [OpenClaw NPM Package](https://www.npmjs.com/package/openclaw)
 - [OpenClaw Documentation](https://docs.z.ai/devpack/tool/openclaw)
 - [Installation & Beginner Guide](https://datapipe.app/openclaw-installation-guide/)
+
+### AI Providers
+- [Kimi (Moonshot AI) Platform](https://platform.moonshot.cn/) - Primary AI provider
+- [OpenRouter](https://openrouter.ai/) - Heartbeat and fallback provider
+- [OpenRouter Models](https://openrouter.ai/models) - Available models
+
+### Infrastructure
 - [Northflank Documentation](https://docs.northflank.com/)
+- [Northflank Dashboard](https://app.northflank.com/t/stefano94103s-team)
 
 ## License
 
