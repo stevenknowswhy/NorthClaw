@@ -1,0 +1,45 @@
+services:
+  openclaw:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: northclaw:latest
+    container_name: openclaw-container
+
+    # Volume mounts for data persistence
+    volumes:
+      - openclaw-data:/data
+      - openclaw-config:/config
+
+    # Environment variables (add your API keys here)
+    environment:
+      - NODE_ENV=production
+      # Add your OpenAI API key
+      # - OPENAI_API_KEY=your_api_key_here
+      # Add your Anthropic API key (if using Claude)
+      # - ANTHROPIC_API_KEY=your_api_key_here
+      # Messaging platform credentials
+      # - WHATSAPP_PHONE_NUMBER=your_number
+      # - TELEGRAM_BOT_TOKEN=your_bot_token
+
+    # Ports (adjust based on OpenClaw's web interface if any)
+    ports:
+      - "3000:3000"
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    restart: unless-stopped
+
+volumes:
+  openclaw-data:
+    driver: local
+  openclaw-config:
+    driver: local
