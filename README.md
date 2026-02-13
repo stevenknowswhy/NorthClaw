@@ -58,11 +58,12 @@ Add required environment variables in Northflank:
 |----------|-------------|----------|
 | `KIMI_API_KEY` | Kimi (Moonshot AI) API key | Yes** |
 | `KIMI_MODEL` | Kimi model (default: moonshot-v1-128k) | No |
-| `OPENROUTER_API_KEY` | OpenRouter API key (heartbeat/fallback) | Yes** |
-| `OPENROUTER_HEARTBEAT_MODEL` | Heartbeat model (default: openai/gpt-3.5-turbo) | No |
+| `GOOGLE_API_KEY` | Google AI API key (heartbeat) | Yes** |
+| `GOOGLE_HEARTBEAT_MODEL` | Gemini model for heartbeat (default: gemini-2.0-flash-exp) | No |
+| `OPENROUTER_API_KEY` | OpenRouter API key (fallback only) | Yes** |
 | `OPENROUTER_FALLBACK_MODEL` | Fallback model (default: anthropic/claude-3-haiku) | No |
 
-**Both Kimi and OpenRouter keys are required for this configuration.
+**Kimi, Google AI, and OpenRouter keys are required for this configuration.
 
 ##### Optional AI Providers (Backup)
 
@@ -93,17 +94,24 @@ Click "Deploy" and monitor the logs for any issues.
 
 ### AI Provider Configuration
 
-This setup uses **Kimi 2.5** as the main AI provider and **OpenRouter** for heartbeat/fallback:
+This setup uses a three-tier AI provider configuration:
 
 - **Kimi (Moonshot AI)**: Primary model for all AI responses
   - Model: `moonshot-v1-128k` (128k context)
   - Alternative models: `moonshot-v1-32k`, `moonshot-v1-8k`
 
-- **OpenRouter**: Secondary provider for heartbeat checks and fallback
-  - Heartbeat model: `openai/gpt-3.5-turbo` (lightweight health checks)
-  - Fallback model: `anthropic/claude-3-haiku` (backup when Kimi is unavailable)
+- **Google AI (Gemini)**: Direct API for heartbeat health checks
+  - Model: `gemini-2.0-flash-exp` (fast and lightweight)
+  - Alternative models: `gemini-1.5-flash`, `gemini-1.5-flash-8b`, `gemini-1.5-pro`
 
-This configuration provides cost efficiency (Kimi's competitive pricing) with reliability (OpenRouter fallback).
+- **OpenRouter**: Fallback provider when Kimi is unavailable
+  - Model: `anthropic/claude-3-haiku` (backup)
+  - Alternative models: `openai/gpt-4o-mini`, `google/gemini-flash-1.5`
+
+This configuration provides:
+- **Cost efficiency** with Kimi's competitive pricing
+- **Fast heartbeat checks** using Google's direct Gemini API
+- **Reliability** with OpenRouter as fallback
 
 ### Getting API Keys
 
@@ -111,6 +119,11 @@ This configuration provides cost efficiency (Kimi's competitive pricing) with re
 1. Visit [Moonshot AI](https://platform.moonshot.cn/)
 2. Create an account and obtain your API key
 3. The key format starts with `sk-`
+
+#### Google AI (Gemini)
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Create an account and obtain your API key
+3. The key format starts with `AIza`
 
 #### OpenRouter
 1. Visit [OpenRouter](https://openrouter.ai/)
@@ -168,7 +181,9 @@ openclaw skill add <skill-name>
 
 ### AI Providers
 - [Kimi (Moonshot AI) Platform](https://platform.moonshot.cn/) - Primary AI provider
-- [OpenRouter](https://openrouter.ai/) - Heartbeat and fallback provider
+- [Google AI Studio](https://aistudio.google.com/app/apikey) - Heartbeat (Gemini)
+- [Google Gemini API Docs](https://ai.google.dev/gemini-api/docs) - Gemini documentation
+- [OpenRouter](https://openrouter.ai/) - Fallback provider
 - [OpenRouter Models](https://openrouter.ai/models) - Available models
 
 ### Infrastructure

@@ -8,7 +8,8 @@ This guide provides step-by-step instructions for deploying OpenClaw to Northfla
 - A Git repository with this code
 - API keys for:
   - **Kimi (Moonshot AI)** - Primary AI provider
-  - **OpenRouter** - Heartbeat and fallback provider
+  - **Google AI** - Heartbeat health checks (Gemini)
+  - **OpenRouter** - Fallback provider
 
 ## Step-by-Step Deployment
 
@@ -68,9 +69,10 @@ Under **"Environment variables"**, add your API keys:
 | `KIMI_API_KEY` | Your Kimi (Moonshot AI) API key |
 | `KIMI_MODEL` | `moonshot-v1-128k` (or `moonshot-v1-32k`, `moonshot-v1-8k`) |
 | `KIMI_BASE_URL` | `https://api.moonshot.cn/v1` |
+| `GOOGLE_API_KEY` | Your Google AI API key |
+| `GOOGLE_HEARTBEAT_MODEL` | `gemini-2.0-flash-exp` (or `gemini-1.5-flash`, `gemini-1.5-flash-8b`) |
 | `OPENROUTER_API_KEY` | Your OpenRouter API key |
-| `OPENROUTER_HEARTBEAT_MODEL` | `openai/gpt-3.5-turbo` (or `google/gemini-flash-1.5`) |
-| `OPENROUTER_FALLBACK_MODEL` | `anthropic/claude-3-haiku` (or `openai/gpt-4o-mini`) |
+| `OPENROUTER_FALLBACK_MODEL` | `anthropic/claude-3-haiku` (or `openai/gpt-4o-mini`, `google/gemini-flash-1.5`) |
 
 #### Optional (Messaging Integrations)
 
@@ -88,8 +90,9 @@ NODE_ENV=production
 KIMI_API_KEY=sk-xxxxxxxxxxxxx
 KIMI_MODEL=moonshot-v1-128k
 KIMI_BASE_URL=https://api.moonshot.cn/v1
+GOOGLE_API_KEY=AIzaxxxxxxxxxxxxx
+GOOGLE_HEARTBEAT_MODEL=gemini-2.0-flash-exp
 OPENROUTER_API_KEY=sk-or-xxxxxxxxxxxxx
-OPENROUTER_HEARTBEAT_MODEL=openai/gpt-3.5-turbo
 OPENROUTER_FALLBACK_MODEL=anthropic/claude-3-haiku
 ```
 
