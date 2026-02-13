@@ -1,15 +1,27 @@
 # Northflank Deployment Guide
 
-This guide provides step-by-step instructions for deploying OpenClaw to Northflank.
+This guide provides step-by-step instructions for deploying OpenClaw to Northflank with Kimi K2.5, Gemini 2.0 Flash, and your custom agent configuration.
 
 ## Prerequisites
 
 - A Northflank account (https://app.northflank.com/t/stefano94103s-team)
 - A Git repository with this code
 - API keys for:
-  - **Kimi (Moonshot AI)** - Primary AI provider
-  - **Google AI** - Heartbeat health checks (Gemini)
-  - **OpenRouter** - Fallback provider
+  - **Moonshot AI** - Primary AI provider (Kimi K2.5)
+  - **Google AI** - Heartbeat health checks (Gemini 2.0 Flash)
+
+## Configuration Summary
+
+This deployment includes:
+
+### AI Models
+- **Primary**: Kimi K2.5 (256k context, 8k max tokens)
+- **Heartbeat**: Gemini 2.0 Flash (1M context, 8k max tokens)
+- **Fallback**: Multiple free-tier models
+
+### Pre-Configured Agents
+- **Wendy** (🌊) - Main agent at `/data/workspace`
+- **Ah-Yeon** (🐦) - Secondary agent at `/data/workspace-ahyeon`
 
 ## Step-by-Step Deployment
 
@@ -63,18 +75,30 @@ Under **"Environment variables"**, add your API keys:
 
 #### Required (AI Providers)
 
-| Variable | Value |
-|----------|-------|
-| `NODE_ENV` | `production` |
-| `KIMI_API_KEY` | Your Kimi (Moonshot AI) API key |
-| `KIMI_MODEL` | `moonshot-v1-128k` (or `moonshot-v1-32k`, `moonshot-v1-8k`) |
-| `KIMI_BASE_URL` | `https://api.moonshot.cn/v1` |
-| `GOOGLE_API_KEY` | Your Google AI API key |
-| `GOOGLE_HEARTBEAT_MODEL` | `gemini-2.0-flash-exp` (or `gemini-1.5-flash`, `gemini-1.5-flash-8b`) |
-| `OPENROUTER_API_KEY` | Your OpenRouter API key |
-| `OPENROUTER_FALLBACK_MODEL` | `anthropic/claude-3-haiku` (or `openai/gpt-4o-mini`, `google/gemini-flash-1.5`) |
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `NODE_ENV` | `production` | Environment |
+| `MOONSHOT_API_KEY` | Your Moonshot API key | Kimi K2.5 |
+| `MOONSHOT_BASE_URL` | `https://api.moonshot.ai/v1` | Moonshot API endpoint |
+| `GOOGLE_API_KEY` | Your Google AI API key | Gemini 2.0 Flash |
+| `GOOGLE_BASE_URL` | `https://generativelanguage.googleapis.com/v1beta` | Google API endpoint |
 
-#### Optional (Messaging Integrations)
+#### Optional (ZAI Platform)
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `ZAI_API_KEY` | Your ZAI API key | Platform features |
+
+#### Agent Configuration (Optional)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `AGENT_WORKSPACE` | `/data/workspace` | Default workspace |
+| `MAX_CONCURRENT` | `4` | Max concurrent operations |
+| `MAX_SUBAGENT_CONCURRENT` | `8` | Max subagent operations |
+| `COMPACTION_MODE` | `safeguard` | Memory compaction |
+
+#### Messaging Integrations (Optional)
 
 | Variable | Description |
 |----------|-------------|
@@ -87,16 +111,15 @@ Under **"Environment variables"**, add your API keys:
 
 ```
 NODE_ENV=production
-KIMI_API_KEY=sk-xxxxxxxxxxxxx
-KIMI_MODEL=moonshot-v1-128k
-KIMI_BASE_URL=https://api.moonshot.cn/v1
-GOOGLE_API_KEY=AIzaxxxxxxxxxxxxx
-GOOGLE_HEARTBEAT_MODEL=gemini-2.0-flash-exp
-OPENROUTER_API_KEY=sk-or-xxxxxxxxxxxxx
-OPENROUTER_FALLBACK_MODEL=anthropic/claude-3-haiku
+MOONSHOT_API_KEY=sk-your-moonshot-key-here
+MOONSHOT_BASE_URL=https://api.moonshot.ai/v1
+GOOGLE_API_KEY=AIza-your-google-key-here
+GOOGLE_BASE_URL=https://generativelanguage.googleapis.com/v1beta
+ZAI_API_KEY=your-zai-key-here
+AGENT_WORKSPACE=/data/workspace
 ```
 
-⚠️ **Important**: Use Northflank's secret management for sensitive values. Never hardcode API keys.
+⚠️ **Important**: Use Northflank's secret management for sensitive values. Never hardcode API keys in the repository.
 
 ### 7. Configure Port
 
@@ -134,17 +157,22 @@ Under **"Resources"**:
 
 1. Check the **"Logs"** tab to ensure OpenClaw started successfully
 2. Look for any error messages related to missing API keys or configuration
+3. Verify that both agents (Wendy and Ah-Yeon) are loaded correctly
 
 ### Initial Configuration
 
-If OpenClaw requires initial setup, you may need to:
+The container includes a pre-configured `openclaw.json` with your agent setup. If you need to make changes:
 
 1. Access the container via **"Console"** in Northflank
-2. Run initialization commands:
+2. View the current configuration:
    ```bash
-   openclaw init
+   cat /config/openclaw.json
    ```
-3. Follow the interactive prompts
+3. Edit if needed:
+   ```bash
+   vi /config/openclaw.json
+   ```
+4. Restart the service to apply changes
 
 ### Connect Messaging Platforms
 
@@ -158,6 +186,7 @@ If OpenClaw requires initial setup, you may need to:
 - Set up monitoring in Northflank
 - Configure alerts for CPU, memory, and disk usage
 - Regularly check logs for issues
+- Watch for agent communication between Wendy and Ah-Yeon
 
 ## Troubleshooting
 
@@ -165,8 +194,8 @@ If OpenClaw requires initial setup, you may need to:
 
 **Check:**
 - Dockerfile syntax is correct
-- All environment variables are set
-- API keys are valid
+- All required environment variables are set (`MOONSHOT_API_KEY`, `GOOGLE_API_KEY`)
+- API keys are valid and properly formatted
 - Volumes are properly configured
 
 **Action:** View the build logs and deployment logs for specific error messages.
@@ -177,14 +206,28 @@ If OpenClaw requires initial setup, you may need to:
 
 **Solution:**
 - Verify API keys are correct and active
-- Check that the keys have proper permissions
+- Check key formats:
+  - Moonshot: starts with `sk-`
+  - Google: starts with `AIza` (may be shorter format `AQ.Ab8...`)
 - Ensure no whitespace or special characters in environment variable values
+
+### Agent Issues
+
+**Symptom:** Agents not responding or communicating.
+
+**Solution:**
+- Check that workspaces are accessible:
+  ```bash
+  ls -la /data/workspace /data/workspace-ahyeon
+  ```
+- Verify agent-to-agent communication is enabled in config
+- Check logs for agent-specific errors
 
 ### Volume Permission Issues
 
 **Symptom:** OpenClaw can't write to /data or /config directories.
 
-**Solution:** The Dockerfile sets up proper permissions, but if issues persist, check the volume ownership in the container:
+**Solution:** The Dockerfile sets up proper permissions, but if issues persist:
 ```bash
 ls -la /data /config
 ```
@@ -195,6 +238,7 @@ ls -la /data /config
 - Resource limits (may need more CPU/RAM)
 - Application logs for errors
 - External service availability (API providers)
+- Agent communication logs
 
 ## Updates and Maintenance
 
@@ -211,6 +255,14 @@ To update to the latest version:
 
 3. Trigger a new deployment in Northflank
 
+### Updating Configuration
+
+To modify agent configuration or models:
+
+1. Edit `config/openclaw.json` in the repository
+2. Push changes to Git
+3. Redeploy in Northflank
+
 ### Scaling
 
 To handle more load:
@@ -226,6 +278,7 @@ To handle more load:
 3. **Monitor Logs**: Regularly review logs for suspicious activity
 4. **Update Regularly**: Keep OpenClaw and dependencies updated
 5. **Network Security**: Use HTTPS and consider IP whitelisting
+6. **Agent Access**: Ensure agent-to-agent communication is properly configured
 
 ## Support
 
@@ -233,3 +286,11 @@ For issues specific to:
 - **Northflank**: Check [Northflank Documentation](https://docs.northflank.com/)
 - **OpenClaw**: Refer to [OpenClaw Documentation](https://docs.z.ai/devpack/tool/openclaw)
 - **This Setup**: Check the main [README.md](README.md)
+
+## Quick Reference: API Key Formats
+
+| Provider | Key Format | Example |
+|----------|------------|---------|
+| Moonshot AI | `sk-...` | `sk-kimi-3ip58...` |
+| Google AI | `AIza...` or `AQ.Ab8...` | `AQ.Ab8RN6Jc...` |
+| ZAI | varies | Check platform |

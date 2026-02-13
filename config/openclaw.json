@@ -1,0 +1,109 @@
+{
+  "$schema": "https://openclaw.dev/schema/config.json",
+  "version": "1.0.0",
+  "auth": {
+    "profiles": {
+      "zai:default": {
+        "provider": "zai",
+        "mode": "api_key"
+      }
+    }
+  },
+  "providers": {
+    "moonshot": {
+      "baseUrl": "https://api.moonshot.ai/v1",
+      "apiKey": "${MOONSHOT_API_KEY}",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "kimi-k2.5",
+          "name": "Kimi K2.5",
+          "contextWindow": 256000,
+          "maxTokens": 8192
+        }
+      ]
+    },
+    "google": {
+      "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+      "apiKey": "${GOOGLE_API_KEY}",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "gemini-2.0-flash",
+          "name": "Gemini 2.0 Flash",
+          "contextWindow": 1048576,
+          "maxTokens": 8192
+        }
+      ]
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "moonshot/kimi-k2.5",
+        "fallbacks": [
+          "openrouter/free:free",
+          "nvidia/nemotron-3-nano-30b-a3b:free",
+          "qwen/qwen3-next-80b-a3b-instruct:free",
+          "stepfun/step-3.5-flash:free",
+          "qwen/qwen3-vl-30b-a3b-thinking:free"
+        ]
+      },
+      "models": {
+        "zai/glm-4.7": {
+          "alias": "GLM"
+        },
+        "openrouter/free:free": {},
+        "nvidia/nemotron-3-nano-30b-a3b:free": {},
+        "qwen/qwen3-next-80b-a3b-instruct:free": {},
+        "stepfun/step-3.5-flash:free": {},
+        "qwen/qwen3-vl-30b-a3b-thinking:free": {},
+        "moonshot/kimi-k2.5": {
+          "alias": "Kimi K2.5"
+        },
+        "google/gemini-2.0-flash": {
+          "alias": "Gemini Flash"
+        }
+      },
+      "workspace": "${AGENT_WORKSPACE:-/data/workspace}",
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      },
+      "heartbeat": {
+        "model": "google/gemini-2.0-flash"
+      }
+    },
+    "list": [
+      {
+        "id": "main",
+        "default": true,
+        "workspace": "${AGENT_WORKSPACE:-/data/workspace}",
+        "identity": {
+          "name": "Wendy",
+          "emoji": "🌊"
+        }
+      },
+      {
+        "id": "ahyeon",
+        "workspace": "/data/workspace-ahyeon",
+        "identity": {
+          "name": "Ah-Yeon",
+          "emoji": "🐦"
+        }
+      }
+    ]
+  },
+  "tools": {
+    "agentToAgent": {
+      "enabled": true,
+      "allow": [
+        "main",
+        "ahyeon"
+      ]
+    }
+  }
+}

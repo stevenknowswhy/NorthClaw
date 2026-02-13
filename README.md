@@ -6,6 +6,44 @@ This project contains Docker configuration for running [OpenClaw](https://www.np
 
 OpenClaw is a personal AI assistant that you run on your own devices. It can integrate with various messaging platforms to provide AI-powered assistance.
 
+## Configuration Overview
+
+This deployment comes pre-configured with:
+
+### AI Models
+
+| Purpose | Model | Provider |
+|---------|-------|----------|
+| **Primary** | Kimi K2.5 (moonshot/kimi-k2.5) | Moonshot AI |
+| **Heartbeat** | Gemini 2.0 Flash (google/gemini-2.0-flash) | Google AI |
+| **Fallback** | Free tier models via OpenRouter | OpenRouter |
+
+### Agents
+
+| ID | Name | Emoji | Workspace |
+|----|------|-------|-----------|
+| `main` | Wendy | 🌊 | `/data/workspace` |
+| `ahyeon` | Ah-Yeon | 🐦 | `/data/workspace-ahyeon` |
+
+### Model Details
+
+**Primary: Kimi K2.5**
+- Context Window: 256,000 tokens
+- Max Output: 8,192 tokens
+- Provider: Moonshot AI (https://api.moonshot.ai/v1)
+
+**Heartbeat: Gemini 2.0 Flash**
+- Context Window: 1,048,576 tokens
+- Max Output: 8,192 tokens
+- Provider: Google AI (https://generativelanguage.googleapis.com/v1beta)
+
+**Fallback Models** (free tier):
+- `openrouter/free:free`
+- `nvidia/nemotron-3-nano-30b-a3b:free`
+- `qwen/qwen3-next-80b-a3b-instruct:free`
+- `stepfun/step-3.5-flash:free`
+- `qwen/qwen3-vl-30b-a3b-thinking:free`
+
 ## Setup
 
 ### Local Testing
@@ -26,7 +64,8 @@ docker run -it --rm \
   -v openclaw-data:/data \
   -v openclaw-config:/config \
   -p 3000:3000 \
-  -e OPENAI_API_KEY=your_key_here \
+  -e MOONSHOT_API_KEY=your_key_here \
+  -e GOOGLE_API_KEY=your_google_key_here \
   northclaw:latest
 ```
 
@@ -46,40 +85,40 @@ Push this repository to your Git provider (GitHub, GitLab, Bitbucket, etc.)
 
 #### Step 3: Configure Volumes
 In Northflank, add persistent volumes:
-- **Volume Path**: `/data` - for application data
-- **Volume Path**: `/config` - for configuration files
+- **Volume Path**: `/data` - for application data (1GB+)
+- **Volume Path**: `/config` - for configuration files (100MB)
 
 #### Step 4: Environment Variables
-Add required environment variables in Northflank:
+Add these environment variables in Northflank:
 
-##### AI Providers (Required)
+##### Required (AI Providers)
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `KIMI_API_KEY` | Kimi (Moonshot AI) API key | Yes** |
-| `KIMI_MODEL` | Kimi model (default: moonshot-v1-128k) | No |
-| `GOOGLE_API_KEY` | Google AI API key (heartbeat) | Yes** |
-| `GOOGLE_HEARTBEAT_MODEL` | Gemini model for heartbeat (default: gemini-2.0-flash-exp) | No |
-| `OPENROUTER_API_KEY` | OpenRouter API key (fallback only) | Yes** |
-| `OPENROUTER_FALLBACK_MODEL` | Fallback model (default: anthropic/claude-3-haiku) | No |
+| `NODE_ENV` | Environment (production) | Yes |
+| `MOONSHOT_API_KEY` | Moonshot AI API key (Kimi K2.5) | Yes |
+| `MOONSHOT_BASE_URL` | Moonshot API endpoint | No (defaults to https://api.moonshot.ai/v1) |
+| `GOOGLE_API_KEY` | Google AI API key (Gemini) | Yes |
+| `GOOGLE_BASE_URL` | Google API endpoint | No (defaults to https://generativelanguage.googleapis.com/v1beta) |
+| `ZAI_API_KEY` | ZAI authentication key | Optional |
 
-**Kimi, Google AI, and OpenRouter keys are required for this configuration.
+##### Agent Configuration (Optional)
 
-##### Optional AI Providers (Backup)
-
-| Variable | Description |
-|----------|-------------|
-| `OPENAI_API_KEY` | OpenAI API key for GPT models |
-| `ANTHROPIC_API_KEY` | Anthropic API key for Claude |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `AGENT_WORKSPACE` | Default agent workspace | `/data/workspace` |
+| `MAX_CONCURRENT` | Max concurrent operations | `4` |
+| `MAX_SUBAGENT_CONCURRENT` | Max subagent operations | `8` |
+| `COMPACTION_MODE` | Memory compaction mode | `safeguard` |
 
 ##### Messaging Platforms (Optional)
 
 | Variable | Description |
 |----------|-------------|
-| `WHATSAPP_PHONE_NUMBER` | WhatsApp integration |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token |
 | `SLACK_BOT_TOKEN` | Slack bot token |
 | `DISCORD_BOT_TOKEN` | Discord bot token |
+| `WHATSAPP_PHONE_NUMBER` | WhatsApp phone number |
 
 #### Step 5: Resource Allocation
 Recommended settings:
@@ -90,47 +129,37 @@ Recommended settings:
 #### Step 6: Deploy
 Click "Deploy" and monitor the logs for any issues.
 
-## Configuration
+## Getting API Keys
 
-### AI Provider Configuration
-
-This setup uses a three-tier AI provider configuration:
-
-- **Kimi (Moonshot AI)**: Primary model for all AI responses
-  - Model: `moonshot-v1-128k` (128k context)
-  - Alternative models: `moonshot-v1-32k`, `moonshot-v1-8k`
-
-- **Google AI (Gemini)**: Direct API for heartbeat health checks
-  - Model: `gemini-2.0-flash-exp` (fast and lightweight)
-  - Alternative models: `gemini-1.5-flash`, `gemini-1.5-flash-8b`, `gemini-1.5-pro`
-
-- **OpenRouter**: Fallback provider when Kimi is unavailable
-  - Model: `anthropic/claude-3-haiku` (backup)
-  - Alternative models: `openai/gpt-4o-mini`, `google/gemini-flash-1.5`
-
-This configuration provides:
-- **Cost efficiency** with Kimi's competitive pricing
-- **Fast heartbeat checks** using Google's direct Gemini API
-- **Reliability** with OpenRouter as fallback
-
-### Getting API Keys
-
-#### Kimi (Moonshot AI)
+### Moonshot AI (Kimi K2.5)
 1. Visit [Moonshot AI](https://platform.moonshot.cn/)
 2. Create an account and obtain your API key
 3. The key format starts with `sk-`
 
-#### Google AI (Gemini)
+### Google AI (Gemini 2.0 Flash)
 1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. Create an account and obtain your API key
 3. The key format starts with `AIza`
 
-#### OpenRouter
-1. Visit [OpenRouter](https://openrouter.ai/)
+### ZAI (Optional)
+1. Visit [ZAI Platform](https://z.ai/)
 2. Create an account and obtain your API key
-3. The key format starts with `sk-or-`
 
-### First-Time Setup
+## OpenClaw Configuration
+
+The container includes a pre-configured `openclaw.json` file at `/config/openclaw.json` with:
+
+- **Agent-to-agent communication** enabled between `main` and `ahyeon`
+- **Model aliases** for easy reference (Kimi K2.5, Gemini Flash, GLM)
+- **Fallback chain** with multiple free-tier models
+- **Workspace configuration** for both agents
+
+To customize the configuration, you can:
+1. Mount your own `openclaw.json` to `/config/openclaw.json`
+2. Use environment variables to override settings
+3. Access the container and edit the config directly
+
+## First-Time Setup
 
 After deployment, you may need to initialize OpenClaw:
 
@@ -142,34 +171,32 @@ openclaw init
 docker exec -it openclaw-container openclaw init
 ```
 
-### Adding Skills
-
-OpenClaw supports AI skills for enhanced functionality:
-
-```bash
-openclaw skill add <skill-name>
-```
-
 ## Troubleshooting
 
 ### Container Won't Start
 - Check the logs in Northflank
 - Verify all required environment variables are set
-- Ensure API keys are valid
+- Ensure API keys are valid and properly formatted
 
 ### Data Persistence Issues
 - Verify volumes are properly mounted in Northflank
 - Check volume permissions
 
-### API Key Issues
+### API Key Errors
 - Ensure API keys have proper permissions
 - Check if the keys are valid and active
+- Verify key formats (Moonshot: `sk-`, Google: `AIza`)
+
+### Agent Issues
+- Check that workspaces are accessible (`/data/workspace`, `/data/workspace-ahyeon`)
+- Verify agent-to-agent communication is enabled in config
 
 ## Security Notes
 
 - The container runs as a non-root user (openclaw:1001)
 - API keys should be stored as environment variables, not in code
-- Consider using Northflank's secret management for sensitive data
+- **Never commit actual API keys to the repository**
+- Use Northflank's secret management for sensitive data
 - OpenClaw can access files and execute commands - ensure proper security measures
 
 ## Resources
@@ -180,11 +207,9 @@ openclaw skill add <skill-name>
 - [Installation & Beginner Guide](https://datapipe.app/openclaw-installation-guide/)
 
 ### AI Providers
-- [Kimi (Moonshot AI) Platform](https://platform.moonshot.cn/) - Primary AI provider
+- [Moonshot AI Platform](https://platform.moonshot.cn/) - Primary AI (Kimi K2.5)
 - [Google AI Studio](https://aistudio.google.com/app/apikey) - Heartbeat (Gemini)
 - [Google Gemini API Docs](https://ai.google.dev/gemini-api/docs) - Gemini documentation
-- [OpenRouter](https://openrouter.ai/) - Fallback provider
-- [OpenRouter Models](https://openrouter.ai/models) - Available models
 
 ### Infrastructure
 - [Northflank Documentation](https://docs.northflank.com/)
